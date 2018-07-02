@@ -3,7 +3,7 @@
 <p>Data is collected with a Google Form. This form is completed by staff when they attend a training session or webinar &amp; asks for the name of the training, when the training was completed, web address, provider, and feedback about training quality &amp; goals.</p>
 <p>This collected form data is the "Master repository" for training data.</p>
 <p>This form collects email address automatically &amp; is restricted to domain users. Repsonse receipts are sent on request, and users can submit another form after submission.</p>
-<img src="https://github.com/fontana-regional-library/scripts/blob/master/Training%20Certificates/imgs/certificate-data.jpg?raw=true"/>
+<img src="https://github.com/fontana-regional-library/scripts/blob/master/Training%20Certificates/imgs/master-data.PNG?raw=true"/>
 <h2>Preparing Training Data for use in Certficate Creation</h2>
 <p>A separate google sheet imports data from the master form response sheet, including staff email, the title of the training, and the date the training was completed, if a certificate has not be sent (using NULL as indicator that certificate hasn't been sent)</p>
 <p>Cell A3:<br/>
@@ -11,7 +11,7 @@
 <p>Lookup staff name &amp; supervisor's email based on trainee's email address:<br/>
     <pre><code>=IFERROR(ARRAYFORMULA(VLOOKUP(A3:A,directory!A2:C,2,FALSE)),"")</code></pre><br/><br/>
     <pre><code>=IFERROR(ARRAYFORMULA(VLOOKUP(A3:A,directory!A2:C,3,FALSE)),"")</code></pre></p>
-    <img src="https://github.com/fontana-regional-library/scripts/blob/master/Training%20Certificates/imgs/certificate-data.JPG?raw=true"/>
+    <img src="https://github.com/fontana-regional-library/scripts/blob/master/Training%20Certificates/imgs/certificate-data.jpg?raw=true"/>
 <h3>Staff Directory Sheet</h3>
 <p>While the form automatically collects email address upon submission, we tried to streamline data collection &amp; avoid input repetition by creating a staff directory sheet that lists the unique emails from the master sheet, and then is populated manually with user's name &amp; supervisor email address.</p>
 <img src="https://github.com/fontana-regional-library/scripts/blob/master/Training%20Certificates/imgs/directory.PNG?raw=true"/>
