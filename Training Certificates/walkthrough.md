@@ -1,9 +1,4 @@
-<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>Creating Certificates with Google Docs and Apps Script</title>
-</head><body><h1>Creating Training Certificates with Google Apps Script</h1>
+<h1>Creating Training Certificates with Google Apps Script</h1>
 <h2>Collecting Data with Google Forms</h2>
 <p>Data is collected with a Google Form. This form is completed by staff when they attend a training session or webinar &amp; asks for the name of the training, when the training was completed, web address, provider, and feedback about training quality &amp; goals.</p>
 <p>This collected form data is the "Master repository" for training data.</p>
@@ -30,5 +25,3 @@
 <h2>Google Apps Script</h2>
 <p>With the google form, google sheets, google slide certificate template, etc ready, we can use the <a href="https://github.com/fontana-regional-library/scripts/blob/master/Training%20Certificates/Training%20Certificate%20sheet%20script.js">Google Apps Script to semi-automate certificate creation</a>.</p>
 <p>Using the script (in the menu on your certificate spreadsheet, go to "Tools>Script Editor"), we create a "Task Menu" which creates a new menu item on our spreadsheet. When clicking "Create and Email," the script will loop through the data, create a new certificate, save a pdf and image version of their certificate, email their certificate to them and their supervisor, and then delete some files for cleanup. (we could script this to happen on form submit, but we've added the button trigger to allow for proofreading before certificates are sent).</p>
-</body>
-</html>
