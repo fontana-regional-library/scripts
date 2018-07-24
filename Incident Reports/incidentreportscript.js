@@ -1,8 +1,16 @@
 // Creates a Google Document version of the Google Form Response based on a formatted template document with placeholder text
 // and emails a notification and a copy of the form response to the reporter and their supervisors (based on location)
-function IncidentReportTemplateCopy(e){
-  var templateId = 'XXXXXXXXXXXXXXXXXXXXX'; //ID of Google document template
-  var folder = DriveApp.getFolderById("XXXXXXXXXXXXXXXXX"); //ID of the FOLDER WHERE Document copy should be saved
+  
+function IncidentReportTemplateCopy(e, responseUrl){
+  var responseSheet = e.range.getSheet();
+  var row = e.range.getRow();
+  //EDIT URLS
+  var responseColumn = 21; // Column where the edit form response URL is recorded.
+  responseSheet.getRange(row, responseColumn).setValue(responseUrl);
+    
+  //DOCS
+  var templateId = 'TEMPLATE-GOOGLE-DOC-IDXXXXXXXX'; //ID of document template
+  var folder = DriveApp.getFolderById("GOOGLE-DRIVE-FOLDER-ID"); //FOLDER WHERE Document copy is saved
 
   var ss = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Form Responses 1');
   var settings = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Settings');
@@ -10,19 +18,21 @@ function IncidentReportTemplateCopy(e){
   var ccEm = settings.getRange("Settings!D2").getValue(); // get the emails listed in Settings sheet to which all Incident Reports are sent - CC's to all reports
   var emailTemplate = settings.getRange("F2").getValue(); //HTML email template with placeholders
 
-  var row = e.range.getRow();
-  var url = 22; // Column where the Google Doc URL is recorded, 22 = V
+  var url = 22; // Column where the Google Doc URL is recorded.
   var dataRange = ss.getRange(row, 1, 1, 23);
-  var dataVals = dataRange.getValues(); //stores row as array, 0 indexed (0=column A, 1=B, etc)
-
-  var share = dataVals[0][22] + "," + dataVals[0][2]; //creates email to list, includes email from report plus supervisors/managers from library selected
+  var dataVals = dataRange.getValues();
+  var userEm = dataVals[0][2];
+  var em = userEm.toString();
+  var share = dataVals[0][22]; //creates email to list, includes email from report plus supervisors/managers from library selected
   var shareArray = share.split(',');
   var emShare = removeDups(shareArray);
-  var emailList = emShare.toString();
+  var emailList = emshare.push(em);
+      emailList = removeDups(emailList);
+      emailList = emailList.toString();
   
   var template = DriveApp.getFileById(templateId);
   var date = dataVals[0][0];
-  var formatDate = Utilities.formatDate(new Date(date), Session.getScriptTimeZone(), "yyyy MMM d, h:mm a"); //formats timestamp of form response (when submitted)
+  var formatDate = Utilities.formatDate(new Date(date), Session.getScriptTimeZone(), "yyyy MMM d, h:mm a");
   var incidentDate = dataVals[0][4];
   var fIncidentDate = Utilities.formatDate(new Date(incidentDate), Session.getScriptTimeZone(), "EEE, MMMMM d, yyyy");
   var incidentTime = dataVals[0][5];
@@ -31,7 +41,7 @@ function IncidentReportTemplateCopy(e){
   //If the form response hasn't been turned into a Google Doc (i.e. new incident report)
   if (!dataVals[0][21]) {
     //Create a Google Doc version of the form response for easier review
-    var name = formatDate + " - " + dataVals[0][3] + " - " + dataVals[0][1] + " - Incident Report"; // Date Submitted - Library Branch - Name of Person Reporting - Incident Report
+    var name = formatDate + " - " + dataVals[0][3] + " - " + dataVals[0][1] + " - Incident Report"; // Date - Library Branch - Name of Person Reporting - Incident Report
     var newReport = template.makeCopy(name, folder)
     var file = DocumentApp.openById(newReport.getId());
     //replace templated values
@@ -56,7 +66,8 @@ function IncidentReportTemplateCopy(e){
         body.replaceText("%FollowupComments%", dataVals[0][17]);
         body.replaceText("%LibrarianComments%", dataVals[0][18]);
         body.replaceText("%LibrarianInitials/Date%", dataVals[0][19]);
-    file.addEditors(emShare); //add 'edit' permissions for reporter and supervisors
+        body.findText("%ReportURL%").getElement().asText().setText("Edit Report").setLinkUrl(dataVals[0][20]).setFontSize(14).setBold(true).setBackgroundColor('#fff2cc');
+    file.addEditors(emShare); //add 'edit' permissions supervisors; all domain users can view
     file.saveAndClose();
     ss.getRange(row, url).setValue(file.getUrl()); //store url to the Google Doc in the form response spreadsheet
     //send an email notification and copy of incident report to reported & their supervisor
@@ -119,6 +130,7 @@ function IncidentReportTemplateCopy(e){
           body.replaceText("%FollowupComments%", dataVals[0][17]);
           body.replaceText("%LibrarianComments%", dataVals[0][18]);
           body.replaceText("%LibrarianInitials/Date%", dataVals[0][19]);
+          body.findText("%ReportURL%").getElement().asText().setText("Edit Report").setLinkUrl(dataVals[0][20]).setFontSize(14).setBold(true).setBackgroundColor('#fff2cc');
           report.saveAndClose();
       // send an email to reporter and their supervisors
       var email = emailTemplate;
@@ -165,23 +177,15 @@ return outArray;
 }
 
 function onFormSubmit(e) {
-// Get the Google Form linked to the response
-  var responseSheet = e.range.getSheet();
-  var googleFormId = 'XXXXXXXXXXXXXXXXXXXXXXXXX'; //form ID from EDIT url (id from form design/edit url, viewform id may be different)
-  var row = e.range.getRow();
-  var responseColumn = 21; // Column where the edit form response URL is recorded, 21 = U
-  var responseValue = responseSheet.getRange(row, responseColumn).getValue();
-  // if the edit form response url hasn't been added, then get the "edit form response" url & add the url to the form responses spreadsheet
-  if (!responseValue) {
-    var googleForm = FormApp.openById(googleFormId);
+  var responseUrl = "";
+  var googleFormId = 'GOOGLE-FORM-IDXXXXXXXXX'; //form ID attahced to sheet (from EDIT url)
+  var googleForm = FormApp.openById(googleFormId);
     // Get the form response based on the timestamp
     var timestamp = new Date(e.namedValues.Timestamp[0]);
     var formResponse = googleForm.getResponses(timestamp).pop();
-    // Get the Form response URL and add it to the Google Spreadsheet
-    var responseUrl = formResponse.getEditResponseUrl();
-    responseSheet.getRange(row, responseColumn).setValue(responseUrl);
-  }
-  IncidentReportTemplateCopy(e);    
+    // Get the Form response URL and pass to add it to the Google Spreadsheet
+    responseUrl = formResponse.getEditResponseUrl();
+  IncidentReportTemplateCopy(e, responseUrl);    
 }
 /**
 * Main function. Creates onFormSubmit trigger.
